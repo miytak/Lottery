@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang='ja'>
+<head>
+  <meta charset='utf-8'>
+  <title>Lottery</title>
+  <style type='text/css'>
+    #winnerNumber {
+      width: 30px;
+      text-align: right;
+    }
+    #result {
+      height: 60px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Lottery</h1>
+  <div id='result'>
+    <div id='members'></div>
+    <div id='winners'></div>
+  </div>
+  <div id='actions'>
+    <input id='winnerNumber' type='text' value='2'></input>
+    <button id='open'>OPEN</button>
+    <input id='entry-name' type='text'></input>
+    <button id='entry'>ENTRY</button>
+    <button id='shoot'>SHOOT</button>
+  </div>
+  <script type='text/javascript' src='./lottery.js'></script>
+  <script type='text/javascript'>
+    var GameComponent = function(){
+      this.members = document.getElementById('members');
+      this.winners = document.getElementById('winners');
+      this.inputNumber = document.getElementById('winnerNumber');
+      this.openBtn = document.getElementById('open');
+      this.inputName = document.getElementById('entry-name');
+      this.entryBtn = document.getElementById('entry');
+      this.shootBtn = document.getElementById('shoot');
+      this.addEvent();
+    };
+    GameComponent.prototype.open = function(){
+      var size = this.inputNumber.value;
+      try {
+        this.lottery = new Lottery(size);
+      } catch(e) {
+        if (e === "not nutural number") {
+          alert ("０以上の整数を入力してください");
+        }
+        return false;
+      }
+    };
+    GameComponent.prototype.entry = function(){
+      this.lottery.add(this.inputName.value);
+      this.members.innerHTML = this.lottery.getMembers();
+    };
+    GameComponent.prototype.shoot = function(){
+      this.winners.innerHTML = this.lottery.getWinners();
+    };
+    GameComponent.prototype.addEvent = function(){
+      this.openBtn.addEventListener('click', this.open.bind(this));
+      this.entryBtn.addEventListener('click', this.entry.bind(this));
+      this.shootBtn.addEventListener('click', this.shoot.bind(this));
+    };
+    var gameComponent = new GameComponent();
+  </script>
+</body>
