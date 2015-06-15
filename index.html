@@ -8,6 +8,10 @@
       width: 30px;
       text-align: right;
     }
+    #entry-weight {
+      width: 30px;
+      text-align: right;
+    }
     #result {
       height: 60px;
     }
@@ -23,6 +27,7 @@
     <input id='winnerNumber' type='text' value='2'></input>
     <button id='open'>OPEN</button>
     <input id='entry-name' type='text'></input>
+    <input id='entry-weight' type='text' value='1'></input>
     <button id='entry'>ENTRY</button>
     <button id='shoot'>SHOOT</button>
   </div>
@@ -34,6 +39,7 @@
       this.inputNumber = document.getElementById('winnerNumber');
       this.openBtn = document.getElementById('open');
       this.inputName = document.getElementById('entry-name');
+      this.inputWeight = document.getElementById('entry-weight');
       this.entryBtn = document.getElementById('entry');
       this.shootBtn = document.getElementById('shoot');
       this.addEvent();
@@ -43,14 +49,21 @@
       try {
         this.lottery = new Lottery(size);
       } catch(e) {
-        if (e === "not nutural number") {
+        if (e === "size is not nutural number") {
           alert ("０以上の整数を入力してください");
         }
         return false;
       }
     };
     GameComponent.prototype.entry = function(){
-      this.lottery.add(this.inputName.value);
+      try {
+        this.lottery.add(this.inputName.value, this.inputWeight.value);
+      } catch(e) {
+        if (e === "weight is not nutural number") {
+          alert ("０以上の整数を入力してください");
+        }
+        return false;
+      }
       this.members.innerHTML = this.lottery.getMembers();
     };
     GameComponent.prototype.shoot = function(){
@@ -62,5 +75,113 @@
       this.shootBtn.addEventListener('click', this.shoot.bind(this));
     };
     var gameComponent = new GameComponent();
+  </script>
+  <script type="text/javascript">
+  (function(){
+    // Shared
+    function getInstance(n){
+      return new Lottery(n);
+    }
+
+    function assert(expect, got, message){
+      console.log("test: " + message);
+      function raiseSuccess(){
+        return console.log("Success");
+      }
+      function raiseFailure(){
+        alert("Failure!!");
+        console.log("expect:", expect);
+        console.log("got:", got);
+      }
+      // Primitive
+      if (typeof expect == "boolean" || typeof(expect) == "string" || typeof(expect) == "number") {
+        if (expect !== got) {
+          return raiseFailure();
+        }
+        return raiseSuccess();
+      };
+      // Object
+      if (typeof expect.length == "undefined") {
+        for (var key in expect) {
+          if (expect[key] != got[key]) {
+            return raiseFailure();
+          }
+        }
+        return raiseSuccess();
+      }
+      // Array
+      if (typeof expect.length == "number") {
+        if (expect.length != got.length) {
+          return raiseFailure();
+        }
+        for (var i = 0; i < expect.length; i++) {
+          if (expect[i] != got[i]) {
+            return raiseFailure();
+          }
+        }
+        return raiseSuccess();
+      }
+    }
+    //  当選者の数
+    // 応募者数より少ない
+    (function(){
+      var lottery = getInstance(1);
+      lottery.add("A", 1);
+      lottery.add("B", 1);
+      // getMembers()
+      assert(lottery.getMembers(), ["A", "B"], "Should be [A, B]")
+
+      // getWinners()
+      var winners = lottery.getWinners();
+      var expect = winners.indexOf("A") > -1 || winners.indexOf("B") > -1;
+      assert(expect, true, "Should be include A or B");
+      assert(winners.length, 1, "Should be returns 1 length array");
+
+    })();
+
+    // 応募者数より多い
+    (function(){
+      var lottery = getInstance(3);
+      lottery.add("A", 1);
+      lottery.add("B", 1);
+      // getMembers()
+      assert(lottery.getMembers(), ["A", "B"], "Should be [A, B]")
+
+      // getWinners()
+      var winners = lottery.getWinners();
+      var expect = winners.indexOf("A") > -1 && winners.indexOf("B") > -1;
+      assert(expect, true, "Should be include A or B");
+      assert(winners.length, 2, "Should be returns 2 length array");
+    })();
+
+    // 重み付けが効いている
+    (function(){
+      var lottery = getInstance(1);
+      lottery.add("A1", 1);
+      lottery.add("A2", 2);
+      lottery.add("A3", 3);
+      lottery.add("A5", 5);
+      lottery.add("A10", 10);
+      lottery.add("A20", 20);
+
+      var winners = {"A1": 0, "A2": 0,"A3": 0,"A5": 0,"A10": 0,"A20": 0,};
+      for (var i = 0; i < 10000; i++) {
+        var results = lottery.getWinners();
+        for (var j = 0; j < results.length; j++) {
+          winners[results[j]]++;
+        }
+      }
+      console.log(winners);
+      var expect = winners.A20 > winners.A10 &&
+                   winners.A10 > winners.A5 &&
+                   winners.A5 > winners.A3 &&
+                   winners.A3 > winners.A2 &&
+                   winners.A2 > winners.A1;
+      assert(expect, true, "Should be a order of win rank [A20 > A10 > A5 > A3 > A2 > A1]");
+
+    })();
+
+  })();
+
   </script>
 </body>

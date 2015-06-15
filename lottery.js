@@ -6,48 +6,68 @@ String.prototype.isValidNumber = function(){
   }
 };
 
-Array.prototype.copy = function(){
-  return this.concat();
-};
-Array.prototype.remove = function(index){
-  this.splice(index, 1);
+Array.prototype.remove = function(value){
+  return this.filter(function(element){
+    if (element !== value) return element
+  });
 };
 
 var Lottery = function(size){
   if (!String(size).isValidNumber()) {
-    throw "not nutural number";
+    throw "size is not nutural number";
   }
-  this.winnerNumber = Number(size);
-  this.member = [];
+  this.prizeCount = Number(size);
+  this.members = [];
 };
-Lottery.prototype.isInMember = function(value){
-  if (this.member.indexOf(value) === -1){
+
+// public methods
+Lottery.prototype.add = function(name, weight){
+  if (this.isInMembers(name)) return false;
+  if (!String(weight).isValidNumber()) {
+    throw "weight is not nutural number";
+  }
+  this.members.push({
+    'name': name,
+    'weight': weight
+  });
+  return true;
+};
+Lottery.prototype.lottery = function(){
+  var winners = [];
+  var membersWithWeight = this.getMembersWithWeight();
+  for (var i = 0; i < this.prizeCount; i++){
+    var luckyNumber = Math.floor(Math.random() * membersWithWeight.length);
+    winners.push(membersWithWeight[luckyNumber]);
+    membersWithWeight = membersWithWeight.remove(membersWithWeight[luckyNumber]);
+  }
+  return winners;
+};
+Lottery.prototype.getMembers = function(){
+  return this.members.map(function(member){
+    return member.name
+  });
+};
+Lottery.prototype.getWinners = function(){
+  if (this.prizeCount === 0) return [];
+  if (this.members.length === 0) return [];
+  if (this.prizeCount >= this.members.length) return this.getMembers();
+  return this.lottery();
+};
+
+// private methods
+Lottery.prototype.isInMembers = function(value){
+  if (this.members.every(function(member){return member.name !== value})){
     return false;
   } else {
     return true;
   }
 };
-Lottery.prototype.add = function(name){
-  if (this.isInMember(name)) return false;
-  this.member.push(name);
-  return true;
-};
-Lottery.prototype.getMembers = function(){
-  return this.member;
-};
-Lottery.prototype.lottery = function(){
-  var winners = [];
-  var player = this.member.copy();
-  for (var i = 0; i < this.winnerNumber; i++){
-    var luckyNumber = Math.floor(Math.random() * player.length);
-    winners.push(player[luckyNumber]);
-    player.remove(luckyNumber);
-  }
-  return winners;
-};
-Lottery.prototype.getWinners = function(){
-  if (this.winnerNumber === 0) return [];
-  if (this.member.length === 0) return [];
-  if (this.winnerNumber >= this.member.length) return this.member;
-  return this.lottery();
+Lottery.prototype.getMembersWithWeight = function(){
+  var list = [];
+  this.members.map(function(member){
+    for(var i = 0; i < member.weight; i++){
+      list.push(member.name);
+    }
+  })
+  return list;
 };
